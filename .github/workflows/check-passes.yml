@@ -25,10 +25,27 @@ jobs:
         pip install -r requirements.txt
     
     - name: Check for available passes
+      id: check
+      continue-on-error: true
       run: |
-        python monitor.py
+        python monitor.py > output.txt 2>&1
+        echo "exit_code=$?" >> $GITHUB_OUTPUT
+    
+    - name: Send email notification
+      if: steps.check.outputs.exit_code == '10'
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: '🎉 Weekend Aquarium Passes Available!'
+        to: ${{ secrets.EMAIL_TO }}
+        from: Museum Pass Monitor
+        body: file://output.txt
     
     - name: Save results
       if: always()
       run: |
+        cat output.txt
         echo "Check completed at $(date)" >> check_log.txt

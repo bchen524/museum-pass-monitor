@@ -84,5 +84,9 @@ def check_aquarium_passes():
 
 
 if __name__ == "__main__":
-    check_aquarium_passes()
+    import sys
+    weekend_slots = check_aquarium_passes()
+    # Exit with code 10 if weekend passes found (for GitHub Actions detection)
+    if weekend_slots:
+        sys.exit(10)
 
