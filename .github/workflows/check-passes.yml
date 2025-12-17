@@ -2,8 +2,8 @@ name: Check Aquarium Pass Availability
 
 on:
   schedule:
-    # Runs every 2 hours
-    - cron: '0 */2 * * *'
+    # Runs every 2 hours starting at 12:01 PM PST (20:01 UTC)
+    - cron: '1 0,2,4,6,8,10,12,14,16,18,20,22 * * *'
   workflow_dispatch:  # Allows manual triggering from GitHub UI
 
 jobs:
