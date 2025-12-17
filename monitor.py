@@ -4,6 +4,8 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
+import os
+import json
 
 
 def check_aquarium_passes():
@@ -83,10 +85,45 @@ def check_aquarium_passes():
         return []
 
 
+def load_notified_dates():
+    """Load the list of dates that have already been notified about"""
+    if os.path.exists('notified_dates.json'):
+        with open('notified_dates.json', 'r') as f:
+            return set(json.load(f))
+    return set()
+
+def save_notified_dates(dates):
+    """Save the list of dates that have been notified about"""
+    with open('notified_dates.json', 'w') as f:
+        json.dump(sorted(list(dates)), f, indent=2)
+
 if __name__ == "__main__":
     import sys
+    
+    # Load previously notified dates
+    notified_dates = load_notified_dates()
+    
+    # Check for available passes
     weekend_slots = check_aquarium_passes()
-    # Exit with code 10 if weekend passes found (for GitHub Actions detection)
-    if weekend_slots:
+    
+    # Filter to only new dates not previously notified
+    new_weekend_slots = [slot for slot in weekend_slots if slot['date'] not in notified_dates]
+    
+    if new_weekend_slots:
+        print("\n" + "=" * 80)
+        print(f"NEW PASSES DETECTED: {len(new_weekend_slots)} new weekend date(s) not previously notified")
+        print("=" * 80)
+        for slot in new_weekend_slots:
+            print(f"NEW: {slot['day']}, {slot['date']} - {slot['link']}")
+            notified_dates.add(slot['date'])
+        
+        # Save updated notified dates
+        save_notified_dates(notified_dates)
+        
+        # Exit with code 10 to trigger email notification
         sys.exit(10)
+    elif weekend_slots:
+        print("\n" + "=" * 80)
+        print("Weekend passes available, but all dates have already been notified about.")
+        print("=" * 80)
 
